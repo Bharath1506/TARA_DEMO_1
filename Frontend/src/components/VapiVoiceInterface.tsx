@@ -3,23 +3,19 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Phone, PhoneOff, Download, Send, Bot, Sparkles, Loader2, Target, CheckCircle2, Paperclip, Link as LinkIcon, X, Heart, Mic, MicOff } from 'lucide-react';
+
+import { Phone, PhoneOff, Download, Send, Bot, Sparkles, Loader2, Target, Paperclip, Link as LinkIcon, X, Heart, Mic, MicOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useVapi } from '@/hooks/useVapi';
 import logoImage from '@/assets/talentspotify-logo.png';
 
-interface Participant {
-    name: string;
-    id?: string;
-    role: 'employee' | 'manager';
-}
+
 
 export const VapiVoiceInterface = () => {
     const [textInput, setTextInput] = useState('');
-    const [participants, setParticipants] = useState<Participant[]>([]);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const { toast } = useToast();
+    // Consent dialog state
     const [isConnecting, setIsConnecting] = useState(false);
     const [hasStartedCall, setHasStartedCall] = useState(false);
     const [attachmentLink, setAttachmentLink] = useState('');
@@ -27,13 +23,6 @@ export const VapiVoiceInterface = () => {
     const [tempLink, setTempLink] = useState('');
     const [showThankYou, setShowThankYou] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
-
-    // Consent dialog state
-    const [showConsentDialog, setShowConsentDialog] = useState(false);
-    const [managerConsent, setManagerConsent] = useState(false);
-    const [employeeConsent, setEmployeeConsent] = useState(false);
-    const [employeeName, setEmployeeName] = useState('');
-    const [managerName, setManagerName] = useState('');
 
     // Use Vapi hook
     const {
@@ -50,37 +39,9 @@ export const VapiVoiceInterface = () => {
     } = useVapi();
 
     const handleStartCall = async () => {
-        // Show consent dialog first
-        setShowConsentDialog(true);
-    };
-
-    const handleConsentSubmit = async () => {
-        // Check if both consents are given
-        if (!managerConsent || !employeeConsent) {
-            toast({
-                title: "Consent Required",
-                description: "Both participants must provide consent to proceed.",
-                variant: "destructive"
-            });
-            return;
-        }
-
-        // Validate names
-        if (!employeeName.trim() || !managerName.trim()) {
-            toast({
-                title: "Names Required",
-                description: "Please enter both employee and manager names.",
-                variant: "destructive"
-            });
-            return;
-        }
-
-        // Close dialog and start call
-        setShowConsentDialog(false);
         setIsConnecting(true);
         try {
-            // Pass names to the call
-            await startCall(employeeName.trim(), managerName.trim());
+            await startCall();
             setHasStartedCall(true);
         } catch (error) {
             console.error(error);
@@ -116,10 +77,6 @@ export const VapiVoiceInterface = () => {
             const timer = setTimeout(() => {
                 setShowThankYou(false);
                 setHasStartedCall(false);
-                setManagerConsent(false);
-                setEmployeeConsent(false);
-                setEmployeeName('');
-                setManagerName('');
             }, 3000); // Show for 3 seconds
             return () => clearTimeout(timer);
         }
@@ -253,137 +210,7 @@ ${'='.repeat(60)}
                 </div>
             )}
 
-            {/* Consent Dialog */}
-            <Dialog open={showConsentDialog} onOpenChange={setShowConsentDialog}>
-                <DialogContent className="sm:max-w-[600px]">
-                    <DialogHeader>
-                        <DialogTitle className="text-2xl font-bold text-center flex items-center justify-center gap-2">
-                            <CheckCircle2 className="h-6 w-6 text-primary" />
-                            Voice Recording Consent
-                        </DialogTitle>
-                        <DialogDescription className="text-center text-base mt-4">
-                            Before we begin, please review and provide your consent
-                        </DialogDescription>
-                    </DialogHeader>
 
-                    <div className="space-y-6 py-4">
-                        {/* Purpose Explanation */}
-                        <div className="bg-primary/5 rounded-lg p-4 space-y-2">
-                            <h4 className="font-semibold text-foreground">Purpose of This Session</h4>
-                            <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-                                <li>Conduct a structured performance review conversation</li>
-                                <li>Record and transcribe the discussion for documentation</li>
-                                <li>Generate insights and feedback based on the conversation</li>
-                                <li>Create a comprehensive review report for HR records</li>
-                            </ul>
-                        </div>
-
-                        {/* Participant Names */}
-                        <div className="space-y-4">
-                            <div className="space-y-2">
-                                <label htmlFor="employee-name" className="text-sm font-medium text-foreground">
-                                    Employee Name <span className="text-destructive">*</span>
-                                </label>
-                                <Input
-                                    id="employee-name"
-                                    placeholder="Enter employee name"
-                                    value={employeeName}
-                                    onChange={(e) => setEmployeeName(e.target.value)}
-                                    className="w-full"
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <label htmlFor="manager-name" className="text-sm font-medium text-foreground">
-                                    Manager Name <span className="text-destructive">*</span>
-                                </label>
-                                <Input
-                                    id="manager-name"
-                                    placeholder="Enter manager name"
-                                    value={managerName}
-                                    onChange={(e) => setManagerName(e.target.value)}
-                                    className="w-full"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Consent Checkboxes */}
-                        <div className="space-y-4">
-                            <div className="flex items-start space-x-3 p-4 bg-accent/5 rounded-lg border border-accent/20">
-                                <Checkbox
-                                    id="manager-consent"
-                                    checked={managerConsent}
-                                    onCheckedChange={(checked) => setManagerConsent(checked as boolean)}
-                                    className="mt-1"
-                                />
-                                <div className="flex-1">
-                                    <label
-                                        htmlFor="manager-consent"
-                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                                    >
-                                        <span className="font-semibold text-primary">
-                                            {managerName.trim() ? `${managerName} (Manager) Consent` : 'Manager Consent'}
-                                        </span>
-                                        <p className="text-xs text-muted-foreground mt-1">
-                                            I consent to having this performance review session recorded and transcribed. I understand the recording will be used for documentation and HR purposes.
-                                        </p>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start space-x-3 p-4 bg-accent/5 rounded-lg border border-accent/20">
-                                <Checkbox
-                                    id="employee-consent"
-                                    checked={employeeConsent}
-                                    onCheckedChange={(checked) => setEmployeeConsent(checked as boolean)}
-                                    className="mt-1"
-                                />
-                                <div className="flex-1">
-                                    <label
-                                        htmlFor="employee-consent"
-                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                                    >
-                                        <span className="font-semibold text-accent">
-                                            {employeeName.trim() ? `${employeeName} (Employee) Consent` : 'Employee Consent'}
-                                        </span>
-                                        <p className="text-xs text-muted-foreground mt-1">
-                                            I consent to having this performance review session recorded and transcribed. I understand the recording will be used for documentation and HR purposes.
-                                        </p>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <DialogFooter className="flex gap-2 sm:gap-0">
-                        <Button
-                            variant="outline"
-                            onClick={() => {
-                                setShowConsentDialog(false);
-                                setManagerConsent(false);
-                                setEmployeeConsent(false);
-                                setEmployeeName('');
-                                setManagerName('');
-                            }}
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={handleConsentSubmit}
-                            disabled={!managerConsent || !employeeConsent || !employeeName.trim() || !managerName.trim()}
-                            className="bg-[#8da356] hover:bg-[#7a8f4b]"
-                        >
-                            {managerConsent && employeeConsent && employeeName.trim() && managerName.trim() ? (
-                                <>
-                                    <CheckCircle2 className="h-4 w-4 mr-2" />
-                                    Start Session
-                                </>
-                            ) : (
-                                "Complete All Fields to Continue"
-                            )}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
 
             {!hasStartedCall ? (
                 <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#fcfbf9] relative overflow-hidden">

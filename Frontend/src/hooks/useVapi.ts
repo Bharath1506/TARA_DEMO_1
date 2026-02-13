@@ -157,18 +157,10 @@ export const useVapi = () => {
 
             console.log('🚀 Starting Vapi call with assistant ID:', assistantId.substring(0, 8) + '...');
 
-            // Create personalized greeting if names are provided
-            let firstMessage = 'Hello! Welcome to your performance review session with TalentSpotify. I\'m Tara, your HR assistant.';
 
-            if (employeeName && managerName) {
-                console.log('👥 Creating personalized greeting for:', { employeeName, managerName });
-                firstMessage = `Hello ${employeeName} and ${managerName}! Welcome to your performance review session with TalentSpotify. I'm Tara, your HR assistant. Let's start with your OKRs. ${employeeName}, what is your first Objective?`;
-            }
 
-            // Start the call with personalized greeting and system prompt overrides
+            // Start the call using the assistant configuration from the dashboard
             await vapi.start(assistantId, {
-                firstMessage: firstMessage,
-                model: VAPI_ASSISTANT_CONFIG.model, // This ensures our updated system prompt is used
                 variableValues: {
                     employeeName: employeeName || 'Employee',
                     managerName: managerName || 'Manager'

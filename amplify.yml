@@ -1,0 +1,19 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - cd Frontend
+        - npm ci
+        - echo "VITE_VOICE_AGENT_PUBLIC_KEY=$VITE_VOICE_AGENT_PUBLIC_KEY" >> .env
+        - echo "VITE_VAPI_ASSISTANT_ID=$VITE_VAPI_ASSISTANT_ID" >> .env
+    build:
+      commands:
+        - npm run build
+  artifacts:
+    baseDirectory: Frontend/dist
+    files:
+      - '**/*'
+  cache:
+    paths:
+      - Frontend/node_modules/**/*
